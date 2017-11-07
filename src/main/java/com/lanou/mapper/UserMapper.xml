@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lanou.mapper.UserMapper">
+
+    <!--定义一个resultMap,将实体类与表进行对应-->
+    <resultMap id="userMap" type="com.lanou.domain.User">
+        <!--主键定义
+            columnL:表中的列名
+            property:实体类中的属性名称-->
+        <id column="id" property="id"/>
+        <!--定义普通属性列-->
+        <result column="loginName" property="loginName"/>
+        <result column="loginPassword" property="loginPassword"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+    </resultMap>
+
+
+    <!--插入一个user对象 使用别名user-->
+    <!--添加插入返回主键id-->
+        <!--keyProperty:指向存放生成主键id的属性-->
+        <!--useGeneratedKeys :true表示给主键设置增长机制-->
+        <!--resultType:返回类型-->
+        <!--order:生成的主键获取的先后顺序,AFTER,插入之后获取的id的值-->
+        <!--before:插入之前获取的值-->
+
+    <insert id="insertUser"
+            parameterType="user"
+            keyProperty="id"
+            useGeneratedKeys="true">
+
+
+    INSERT INTO TUser(loginName,loginPassword,gender,age) VALUES (#{loginName},#{loginPassword},#{gender},#{age})
+    </insert>
+
+    <!--查询所有-->
+    <select id="findAll"
+            resultMap="userMap">
+        SELECT * FROM TUser
+    </select>
+
+    <!--根据主键id查询-->
+    <select id="findById"
+            parameterType="int"
+            resultType="com.lanou.domain.User">
+        SELECT * FROM TUser WHERE id=#{id}
+    </select>
+
+    <!--根据名字模糊查询-->
+    <select id="findByName"
+            parameterType="java.lang.String"
+            resultType="com.lanou.domain.User">
+        SELECT *FROM Tuser WHERE loginName LIKE '${value}'
+    </select>
+
+    <!--根据主键id删除某个User对象-->
+    <delete id="deleteById"
+            parameterType="int">
+        DELETE FROM Tuser WHERE id=#{id}
+    </delete>
+
+    <!--更新某个对象-->
+    <update id="updateById"
+            parameterType="com.lanou.domain.User">
+        UPDATE TUser SET loginName=#{loginName},loginPassword=#{loginPassword},gender=#{gender},age=#{age} WHERE id=#{id}
+    </update>
+
+    <update id="updateById2"
+            parameterType="com.lanou.domain.User">
+        UPDATE TUser SET id=#{id}
+        <if test="loginName!=null and loginName!=''">
+            ,loginName = #{loginName}
+        </if>
+        <if test="loginPassword!=null and loginPassword!=''">
+            ,loginPassword=#{loginPassword}
+        </if>
+
+        WHERE id=#{id}
+    </update>
+
+    <!--根据姓名,密码进行模糊查询-->
+    <select id="findByNameOrPassword"
+            parameterType="com.lanou.domain.UserExt"
+            resultMap="userMap">
+        SELECT * FROM TUser
+        /*添加动态sql语句,where标签会自动去掉第一个and*/
+        <where>
+            1=1
+            <if test="user != null">
+
+                <if test="user.loginName != null and user.loginName!=''">
+                   AND  loginName=#{user.loginName}
+                </if>
+
+                <if test="user.loginPassword != null and user.loginPassword!=''">
+                    AND loginPassword =#{user.loginPassword}
+                </if>
+            </if>
+
+
+
+        </where>
+    </select>
+
+    <!--批量查询id,即:select * from 表名 where id in(1,2,3....)-->
+    <select id="findByIds"
+            parameterType="com.lanou.domain.UserExt"
+            resultMap="userMap">
+        SELECT * FROM TUser WHERE 1=1
+        /*要查询的id集合不为空,并且size大于0*/
+        <if test="idList != null and idList.size >0 ">
+            /*
+           collection:要遍历的集合对象
+            item:遍历过程中生成的临时对象
+            open:字符串拼接开始拼接的字符窜
+            close:字符串拼接结束拼接的字符窜
+            separator:遍历过程中使用的分隔符*/
+            <foreach collection="idList" item="id"
+                     open=" and id in("
+                     close= ")"
+                     separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+</mapper>
